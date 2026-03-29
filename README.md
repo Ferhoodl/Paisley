@@ -1,2 +1,2 @@
-# American Typhoon
+# Paisley
 ### (A chess engine in C)
