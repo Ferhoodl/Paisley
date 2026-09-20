@@ -60,6 +60,63 @@ const U64 SIX_COL	= 0x0000FF0000000000;
 const U64 SEVEN_COL	= 0x00FF000000000000;
 const U64 EIGHT_COL	= 0xFF00000000000000;
 
+
+// PRE-CALCULATED ATTACKS =========================================
+
+U64 pawn_attacks[2][64];
+U64 knight_attacks[64];
+
+U64 mask_pawn_attacks(int side, int square){
+
+	U64 attacks_bitboard = 0ULL;
+
+	U64 piece_bitboard = 0ULL;
+	set_bit(piece_bitboard, square);	
+
+	if(side == white){
+		attacks_bitboard |= ((piece_bitboard << 7) & ~H_FILE); // attack left (white perspective)
+		attacks_bitboard |= ((piece_bitboard << 9) & ~A_FILE); // attack right (white perspective)
+	}else if(side == black){
+		attacks_bitboard |= ((piece_bitboard >> 7) & ~A_FILE); // attack left (black perspective)
+		attacks_bitboard |= ((piece_bitboard >> 9) & ~H_FILE); // attack right (black perspective)
+	}
+	return attacks_bitboard;
+}
+
+U64 mask_knight_attacks(int square){
+	U64 attacks_bitboard = 0ULL;
+
+	U64 piece_bitboard = 0ULL;
+	set_bit(piece_bitboard, square);
+
+	attacks_bitboard |= ((piece_bitboard >> 6)  & ~AB_FILE);
+	attacks_bitboard |= ((piece_bitboard >> 10) & ~GH_FILE);
+	attacks_bitboard |= ((piece_bitboard >> 15) & ~A_FILE);
+	attacks_bitboard |= ((piece_bitboard >> 17) & ~H_FILE);
+
+	attacks_bitboard |= ((piece_bitboard << 6)  & ~GH_FILE);
+	attacks_bitboard |= ((piece_bitboard << 10) & ~AB_FILE);
+	attacks_bitboard |= ((piece_bitboard << 15) & ~H_FILE);
+	attacks_bitboard |= ((piece_bitboard << 17) & ~A_FILE);
+
+	return attacks_bitboard;
+}
+
+
+void init_pawn_attack_tables(){
+	for(int square = 0; square < 64; square++){
+		pawn_attacks[white][square] = mask_pawn_attacks(white, square);
+		pawn_attacks[black][square] = mask_pawn_attacks(black, square);
+	}
+}
+
+void init_knight_attack_tables(){
+	for(int square = 0; square < 64; square++){
+		knight_attacks[square] = mask_knight_attacks(square);
+	}
+}
+
+
 // BOARD DEBUG PRINT =============================================
 
 void print_bitboard(U64 bitboard){
@@ -77,40 +134,24 @@ void print_bitboard(U64 bitboard){
 }
 
 
-// PRE-CALCULATED ATTACKS =========================================
-
-U64 pawn_attacks[2][64];
-
-U64 mask_pawn_attacks(int square, int side){
-
-	U64 attacks_bitboard = 0ULL;
-
-	U64 piece_bitboard = 0ULL;
-	set_bit(piece_bitboard, square);	
-
-	if(side == white){
-		attacks_bitboard |= ((piece_bitboard << 7) & ~H_FILE); // attack left (white perspective)
-		attacks_bitboard |= ((piece_bitboard << 9) & ~A_FILE); // attack right (white perspective)
-	}else if(side == black){
-		attacks_bitboard |= ((piece_bitboard >> 7) & ~A_FILE); // attack left (black perspective)
-		attacks_bitboard |= ((piece_bitboard >> 9) & ~H_FILE); // attack right (black perspective)
-	}
-
-
-	return attacks_bitboard;
-
-}
-	
 
 // MAIN FUNCTION ==============================================
 
 int main(int argc, char *argv[]){
 
-	print_bitboard(GH_FILE);
 
-	U64 masked_board = mask_pawn_attacks(a2, black);
+/*	
+	U64 kmask = mask_knight_attacks(c3);
 
-	print_bitboard(masked_board);	
+	print_bitboard(kmask);
+
+*/
+	init_knight_attack_tables();
+	
+	for(int square = 0; square < 64; square++){
+		printf("%d:\n", square);
+		print_bitboard(knight_attacks[square]);
+	}
 
 	return 0;	
 }
