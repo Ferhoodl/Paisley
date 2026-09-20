@@ -1,2 +1,2 @@
 # Paisley
-### (A chess engine in C)
+### A chess engine in C
